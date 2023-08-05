@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>369</width>
+    <height>93</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>اداة المعادلات</string>
+  </property>
+  <property name="layoutDirection">
+   <enum>Qt::RightToLeft</enum>
+  </property>
+  <property name="locale">
+   <locale language="Arabic" country="Egypt"/>
+  </property>
+  <property name="dockOptions">
+   <set>QMainWindow::AllowTabbedDocks|QMainWindow::AnimatedDocks</set>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <property name="minimumSize">
+    <size>
+     <width>369</width>
+     <height>0</height>
+    </size>
+   </property>
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <widget class="QPushButton" name="wordButton">
+      <property name="maximumSize">
+       <size>
+        <width>16777215</width>
+        <height>16777215</height>
+       </size>
+      </property>
+      <property name="font">
+       <font>
+        <family>Times New Roman</family>
+        <pointsize>12</pointsize>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="whatsThis">
+       <UInt>0</UInt>
+      </property>
+      <property name="text">
+       <string>فتح تطبيق ورد</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <widget class="QPushButton" name="convertButton">
+      <property name="font">
+       <font>
+        <family>Times New Roman</family>
+        <pointsize>12</pointsize>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="text">
+       <string>تحويل صور المعادلات الى لاتيك</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
