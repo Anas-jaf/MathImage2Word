@@ -34,7 +34,7 @@ class custom_http_server(BaseHTTPRequestHandler):
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(369, 93)
+        MainWindow.resize(369, 136)
         MainWindow.setLayoutDirection(QtCore.Qt.RightToLeft)
         MainWindow.setLocale(QtCore.QLocale(QtCore.QLocale.Arabic, QtCore.QLocale.Egypt))
         MainWindow.setDockOptions(QtWidgets.QMainWindow.AllowTabbedDocks|QtWidgets.QMainWindow.AnimatedDocks)
@@ -53,6 +53,15 @@ class Ui_MainWindow(object):
         self.wordButton.setFont(font)
         self.wordButton.setObjectName("wordButton")
         self.gridLayout.addWidget(self.wordButton, 0, 0, 1, 1)
+        self.checkImagesButton = QtWidgets.QPushButton(self.centralwidget)
+        font = QtGui.QFont()
+        font.setFamily("Times New Roman")
+        font.setPointSize(12)
+        font.setBold(True)
+        font.setWeight(75)
+        self.checkImagesButton.setFont(font)
+        self.checkImagesButton.setObjectName("checkImagesButton")
+        self.gridLayout.addWidget(self.checkImagesButton, 2, 0, 1, 1)
         self.convertButton = QtWidgets.QPushButton(self.centralwidget)
         font = QtGui.QFont()
         font.setFamily("Times New Roman")
@@ -61,7 +70,7 @@ class Ui_MainWindow(object):
         font.setWeight(75)
         self.convertButton.setFont(font)
         self.convertButton.setObjectName("convertButton")
-        self.gridLayout.addWidget(self.convertButton, 1, 0, 1, 1)
+        self.gridLayout.addWidget(self.convertButton, 3, 0, 1, 1)
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
@@ -71,10 +80,9 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "اداة المعادلات"))
         self.wordButton.setText(_translate("MainWindow", "فتح تطبيق ورد"))
+        self.checkImagesButton.setText(_translate("MainWindow", "التحقق من صور المعادلات"))
         self.convertButton.setText(_translate("MainWindow", "تحويل صور المعادلات الى لاتيك"))
-        self.wordButton.clicked.connect(self.on_wordButton_clicked)
-        self.convertButton.clicked.connect(self.on_convertButton_clicked)
-
+        
     def on_wordButton_clicked(self):
         global _word_app        # FIXME: غير هذا الاسلوب و استخدم البرمجة الشيئية بدل من تعريف المتغير كمتغير عالمي
         _word_app = open_word()
