@@ -22,7 +22,12 @@ class custom_http_server(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
-        insert_image( _word_app , r'E:\programming\MathImage2Word\MathImage2Word\test_folder\Untitled.jpg' )
+        
+        # Read the POST request data from the request body
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length)
+                
+        insert_image( _word_app , post_data)
         message = "Hello, World! Here is a POST response"
         self.wfile.write(bytes(message, "utf8"))
 
@@ -84,7 +89,6 @@ class Ui_MainWindow(object):
         # Start the HTTP server
         with HTTPServer(('', 8000), custom_http_server) as server:
             server.serve_forever()
-
 
 if __name__ == "__main__":
     try:

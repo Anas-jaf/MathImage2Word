@@ -1,4 +1,5 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from urllib.parse import parse_qs
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -13,6 +14,12 @@ class handler(BaseHTTPRequestHandler):
         self.send_header('Content-type','text/html')
         self.end_headers()
 
+        # Read the POST request data from the request body
+        content_length = int(self.headers['Content-Length'])
+        post_data = self.rfile.read(content_length)
+        
+        print(post_data)
+        
         message = "Hello, World! Here is a POST response"
         self.wfile.write(bytes(message, "utf8"))
 
