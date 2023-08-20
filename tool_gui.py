@@ -2,6 +2,9 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from http.server import BaseHTTPRequestHandler, HTTPServer
+
+from PyQt5.QtWidgets import QFileDialog
+from document_dialog import Ui_Dialog
 from utils import *
 import sys
 
@@ -32,6 +35,25 @@ class custom_http_server(BaseHTTPRequestHandler):
         self.wfile.write(bytes(message, "utf8"))
 
 class Ui_MainWindow(object):
+    def on_dialog_button_clicked(self):
+        options = QFileDialog.Options()
+        options |= QFileDialog.ReadOnly
+        file_name, _ = QFileDialog.getOpenFileName(QtWidgets.QDialog(), "Open File", "", "All Files (*)", options=options)
+
+        if file_name:
+            print("Selected File:", file_name)
+            MainWindow.showMinimized()
+            self.dialog.accept()            
+            return file_name
+
+    def open_dialog(self):
+        self.dialog = QtWidgets.QDialog()
+        self.ui_dialog = Ui_Dialog()
+        self.ui_dialog.setupUi(self.dialog)
+        self.ui_dialog.new_dox.clicked.connect(self.on_wordButton_clicked)
+        self.ui_dialog.open_recent.clicked.connect(self.on_dialog_button_clicked)
+        self.dialog.show()
+        
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(369, 136)
@@ -43,7 +65,8 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
         self.gridLayout.setObjectName("gridLayout")
-        self.wordButton = QtWidgets.QPushButton(self.centralwidget)
+        self.wordButton = QtWidgets.QPushButton(self.centralwidget )
+        self.wordButton.clicked.connect(self.open_dialog)
         self.wordButton.setMaximumSize(QtCore.QSize(16777215, 16777215))
         font = QtGui.QFont()
         font.setFamily("Times New Roman")
@@ -85,8 +108,10 @@ class Ui_MainWindow(object):
         
     def on_wordButton_clicked(self):
         global _word_app        # FIXME: غير هذا الاسلوب و استخدم البرمجة الشيئية بدل من تعريف المتغير كمتغير عالمي
+        self.dialog.accept()
+        MainWindow.showMinimized()
         _word_app = open_word()
-        get_or_create_document(_word_app)
+        create_new_document(_word_app)
         self.start_server()
 
     def on_convertButton_clicked(self):
