@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>369</width>
-    <height>136</height>
+    <height>177</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -29,8 +29,8 @@
      <height>0</height>
     </size>
    </property>
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
+   <layout class="QVBoxLayout" name="verticalLayout">
+    <item>
      <widget class="QPushButton" name="wordButton">
       <property name="maximumSize">
        <size>
@@ -51,7 +51,7 @@
       </property>
      </widget>
     </item>
-    <item row="2" column="0">
+    <item>
      <widget class="QPushButton" name="checkImagesButton">
       <property name="font">
        <font>
@@ -66,7 +66,7 @@
       </property>
      </widget>
     </item>
-    <item row="3" column="0">
+    <item>
      <widget class="QPushButton" name="convertButton">
       <property name="font">
        <font>
@@ -80,6 +80,45 @@
        <string>تحويل صور المعادلات الى لاتيك</string>
       </property>
      </widget>
+    </item>
+    <item>
+     <layout class="QHBoxLayout" name="horizontalLayout">
+      <item>
+       <widget class="QLabel" name="label">
+        <property name="font">
+         <font>
+          <family>Times New Roman</family>
+          <pointsize>15</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>عنوان الجهاز الداخلي </string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="address">
+        <property name="font">
+         <font>
+          <family>Times New Roman</family>
+          <pointsize>11</pointsize>
+         </font>
+        </property>
+        <property name="cursor">
+         <cursorShape>ArrowCursor</cursorShape>
+        </property>
+        <property name="layoutDirection">
+         <enum>Qt::RightToLeft</enum>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+      </item>
+     </layout>
     </item>
    </layout>
   </widget>
