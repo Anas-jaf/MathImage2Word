@@ -43,10 +43,10 @@ class Ui_MainWindow(object):
 
         if file_name:
             print("Selected File:", file_name)
+            self.dialog.accept()
+            MainWindow.showMinimized()
             _word_app = open_word()
             open_document_from_path(file_name , _word_app)
-            MainWindow.showMinimized()
-            self.dialog.accept()
             self.start_server()
             return file_name
 
