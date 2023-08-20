@@ -1,10 +1,42 @@
-import base64
-import io
-import tempfile
+import xml.etree.ElementTree as ET
 import win32com.client as win32
 from PIL import Image
+import tempfile
 import win32gui
+import base64
+import io
 import os
+import socket
+
+def get_local_ip_address():
+    hostname = socket.gethostname()
+    local_ip = socket.gethostbyname(hostname)
+    return local_ip
+
+def extract_blip_id(xml_content):
+    '''
+    use it like this 
+    [extract_blip_id(par._p.xml) for par in doc.paragraphs  if 'graphicData' in par._p.xml]
+    '''
+    # Namespace dictionary
+    ns = {
+        'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
+        'a': 'http://schemas.openxmlformats.org/drawingml/2006/main',
+        'pic': 'http://schemas.openxmlformats.org/drawingml/2006/picture',
+        'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
+    }
+
+    # Parse the XML content
+    root = ET.fromstring(xml_content)
+
+    # Find the a:blip element
+    blip_element = root.find('.//a:blip', namespaces=ns)
+
+    if blip_element is not None:
+        r_embed = blip_element.attrib.get(f"{{{ns['r']}}}embed")
+        return r_embed
+    else:
+        return None
 
 def get_all_pictures(doc):
     pictures = []
@@ -96,11 +128,10 @@ def create_new_document(word_app):
         doc = word_app.Documents.Add()
     return doc
 
-def open_document_from_path(file_path): # note: file_path should be a r string
+def open_document_from_path(file_path , _word_app ): # note: file_path should be a r string
     try:
-        word = open_word()
-        if word:
-            doc = word.Documents.Open(file_path)
+        if _word_app:
+            doc = _word_app.Documents.Open(file_path)
             return doc
     except Exception as e:
         print("Error:", e)
