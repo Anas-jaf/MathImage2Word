@@ -7,17 +7,28 @@ import base64
 import io
 import os
 import socket
+from docx import Document
+
+def get_all_pictures_in_docx(docx_path):
+    doc = Document(docx_path)
+    # print([(item , doc.inline_shapes._parent._rels[item].target_part.blob ) for item in doc.inline_shapes._parent._rels])
+    blip_data = {}
+    idx = 0
+    for item in doc.inline_shapes._parent._rels :
+        if 'media' in doc.inline_shapes._parent._rels[item].target_ref :
+            idx += 1
+            target_part = doc.inline_shapes._parent._rels[item].target_part
+            blob = target_part.blob
+            # blip_data ((item, blob))
+            blip_data[idx] = blob
+    return blip_data
 
 def get_local_ip_address():
     hostname = socket.gethostname()
     local_ip = socket.gethostbyname(hostname)
     return local_ip
 
-def extract_blip_id(xml_content):
-    '''
-    use it like this 
-    [extract_blip_id(par._p.xml) for par in doc.paragraphs  if 'graphicData' in par._p.xml]
-    '''
+def extract_all_blip_ids(xml_content):
     # Namespace dictionary
     ns = {
         'w': 'http://schemas.openxmlformats.org/wordprocessingml/2006/main',
@@ -29,30 +40,34 @@ def extract_blip_id(xml_content):
     # Parse the XML content
     root = ET.fromstring(xml_content)
 
-    # Find the a:blip element
-    blip_element = root.find('.//a:blip', namespaces=ns)
+    # Find all a:blip elements
+    blip_elements = root.findall('.//a:blip', namespaces=ns)
 
-    if blip_element is not None:
+    blip_ids = []
+
+    for blip_element in blip_elements:
         r_embed = blip_element.attrib.get(f"{{{ns['r']}}}embed")
-        return r_embed
-    else:
-        return None
+        if r_embed:
+            blip_ids.append(r_embed)
 
-def get_all_pictures(doc):
-    pictures = []
-    if doc:
-        for shape in doc.InlineShapes:
-            if shape.Type == 3:  # 3 represents pictures
-                picture_path = os.path.join(os.getcwd(), f"picture_{len(pictures)+1}.jpg")
-                shape.Range.CopyAsPicture()
-                word_app = doc.Application
-                word_app.Selection.Paste()
-                picture = word_app.ActiveWindow.Selection.ShapeRange[1]
-                picture.Copy()
-                picture.Export(picture_path)
-                pictures.append(picture_path)
-                word_app.ActiveWindow.Selection.Delete()  # Delete the floating shape from the document
-    return pictures
+    return blip_ids
+
+def convert_images_to_latex(image):
+    pass
+    # pictures = []
+    # if doc:
+    #     for shape in doc.InlineShapes:
+    #         if shape.Type == 3:  # 3 represents pictures
+    #             picture_path = os.path.join(os.getcwd(), f"picture_{len(pictures)+1}.jpg")
+    #             shape.Range.CopyAsPicture()
+    #             word_app = doc.Application
+    #             word_app.Selection.Paste()
+    #             picture = word_app.ActiveWindow.Selection.ShapeRange[1]
+    #             picture.Copy()
+    #             picture.Export(picture_path)
+    #             pictures.append(picture_path)
+    #             word_app.ActiveWindow.Selection.Delete()  # Delete the floating shape from the document
+    # return pictures
 
 def set_foreground_window(hwnd):
     try:
@@ -78,7 +93,7 @@ def find_word_window(title):
 
 def open_word():
     try:
-        word = win32.gencache.EnsureDispatch("Word.Application")
+        word = win32.dynamic.Dispatch("Word.Application")
         word.Visible = True
         hwnd = win32gui.FindWindow(None, "Microsoft Word")  # Assuming the window title is "Microsoft Word"
         hwnd = find_word_window("Microsoft Word")  # Try to find the Word window by title
@@ -128,17 +143,17 @@ def create_new_document(word_app):
         doc = word_app.Documents.Add()
     return doc
 
-def open_document_from_path(file_path , _word_app ): # note: file_path should be a r string
+def open_document_from_path( file_path=None , _word_app=None  ): # note: file_path should be a r string
     try:
-        if _word_app:
+        if file_path:
             doc = _word_app.Documents.Open(file_path)
             return doc
     except Exception as e:
         print("Error:", e)
-        
+
 if __name__ == "__main__":
     word_app = open_word()
     # path = r'{}'.format(input("give me word document path"))
     path = r"C:\Users\ansas\OneDrive\Documents\تجربة.docx"
-    doc = open_document_from_path(path)
-    get_all_pictures(doc)
+    doc = open_document_from_path(file_path= path , _word_app = word_app)
+    convert_images_to_latex(doc)
