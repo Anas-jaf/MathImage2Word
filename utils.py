@@ -1,13 +1,24 @@
 import xml.etree.ElementTree as ET
 import win32com.client as win32
-from PIL import Image
-import tempfile
-import win32gui
-import base64
-import io
-import os
-import socket
+import latex2mathml.converter
 from docx import Document
+from lxml import etree
+from PIL import Image
+import win32gui
+import tempfile
+import base64
+import socket
+import os 
+
+def latex_to_word(latex_input):
+    mathml = latex2mathml.converter.convert(latex_input)
+    tree = etree.fromstring(mathml)
+    xslt = etree.parse(
+        'MML2OMML.XSL'
+        )
+    transform = etree.XSLT(xslt)
+    new_dom = transform(tree)
+    return new_dom.getroot()
 
 def get_all_pictures_in_docx(docx_path):
     doc = Document(docx_path)
@@ -52,22 +63,25 @@ def extract_all_blip_ids(xml_content):
 
     return blip_ids
 
-def convert_images_to_latex(image):
-    pass
-    # pictures = []
-    # if doc:
-    #     for shape in doc.InlineShapes:
-    #         if shape.Type == 3:  # 3 represents pictures
-    #             picture_path = os.path.join(os.getcwd(), f"picture_{len(pictures)+1}.jpg")
-    #             shape.Range.CopyAsPicture()
-    #             word_app = doc.Application
-    #             word_app.Selection.Paste()
-    #             picture = word_app.ActiveWindow.Selection.ShapeRange[1]
-    #             picture.Copy()
-    #             picture.Export(picture_path)
-    #             pictures.append(picture_path)
-    #             word_app.ActiveWindow.Selection.Delete()  # Delete the floating shape from the document
-    # return pictures
+def convert_images_to_latex(doc , latex_list):
+    # Load the existing Word document
+    doc = Document('Doc1.docx')
+    idx = 0
+    for paragraph in doc.paragraphs:
+        if 'w:drawing' in paragraph._element.xml:
+            # Get the XML representation of the paragraph
+            # paragraph_xml = paragraph._element.xml
+            idx += 1
+            # if idx == 4 : 
+            #     break
+            p = paragraph._element
+            new_paragraph = Document().add_paragraph('This is a paragraph')
+            p.getparent().replace(p , new_paragraph._element)
+            paragraph._p = paragraph._element = None
+            # doc.add_paragraph(f'Replaced image{idx}')
+    # Save the modified document
+    doc.save('modified_document.docx')
+
 
 def set_foreground_window(hwnd):
     try:
@@ -156,4 +170,6 @@ if __name__ == "__main__":
     # path = r'{}'.format(input("give me word document path"))
     path = r"C:\Users\ansas\OneDrive\Documents\تجربة.docx"
     doc = open_document_from_path(file_path= path , _word_app = word_app)
-    convert_images_to_latex(doc)
+    convert_images_to_latex(doc , None)
+    
+    
