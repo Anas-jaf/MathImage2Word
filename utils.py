@@ -1,5 +1,6 @@
 import xml.etree.ElementTree as ET
 import win32com.client as win32
+from photoMath_utils import *
 import latex2mathml.converter
 from docx import Document
 from lxml import etree
@@ -11,6 +12,13 @@ import socket
 import os 
 
 def latex_to_word(latex_input):
+    '''
+    document = Document()
+    p = document.add_paragraph()
+    word_math = latex_to_word(r"\sum_{i=1}^{10}{\frac{\sigma_{zp,i}}{E_i} kN")
+    p._element.append(word_math)
+    
+    '''
     mathml = latex2mathml.converter.convert(latex_input)
     tree = etree.fromstring(mathml)
     xslt = etree.parse(
@@ -24,20 +32,25 @@ def get_all_pictures_in_docx(docx_path):
     doc = Document(docx_path)
     # print([(item , doc.inline_shapes._parent._rels[item].target_part.blob ) for item in doc.inline_shapes._parent._rels])
     blip_data = {}
-    idx = 0
     for item in doc.inline_shapes._parent._rels :
         if 'media' in doc.inline_shapes._parent._rels[item].target_ref :
-            idx += 1
             target_part = doc.inline_shapes._parent._rels[item].target_part
             blob = target_part.blob
-            # blip_data ((item, blob))
-            blip_data[idx] = blob
+            blip_data[item] = blob
     return blip_data
 
 def get_local_ip_address():
-    hostname = socket.gethostname()
-    local_ip = socket.gethostbyname(hostname)
-    return local_ip
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('192.255.255.255', 1))
+        IP = s.getsockname()[0]
+    except:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
+ 
 
 def extract_all_blip_ids(xml_content):
     # Namespace dictionary
@@ -63,25 +76,54 @@ def extract_all_blip_ids(xml_content):
 
     return blip_ids
 
-def convert_images_to_latex(doc , latex_list):
-    # Load the existing Word document
-    doc = Document('Doc1.docx')
-    idx = 0
+def latex_list_from_images(auth , document):
+    
+    pic_list = get_all_pictures_in_docx(document)
+    sorted_pic_dict = dict(
+                            sorted(
+                                    {
+                                        int(key.replace('rId', '')): value 
+                                            for key, value in sorted(pic_list.items())
+                                    }.items()
+                            ))
+
+    numbered_sorted_pic_dict = {
+                                idx :value for idx , (key, value) in enumerate(sorted_pic_dict.items())
+                                }
+    latex_list = []
+    for image_idx in range(len(numbered_sorted_pic_dict)):
+        try:
+            json_repr = image_ocr_photomath(auth=auth ,image_content=numbered_sorted_pic_dict[image_idx] , full_response= True)
+            
+            equation = dict_to_equation(json_repr['result']['groups'][0]['entries'][0]['nodeAction']['node'])
+            latex_list.append(equation)
+        except KeyError :
+            try : 
+                equation = dict_to_equation(json_repr['mathConcept']['nodeAction']['node'])
+                latex_list.append(equation)     
+            except KeyError :
+                equation = dict_to_equation(json_repr['info']['solver']['normalizedInput']['node'])
+                latex_list.append(equation)
+        except :      
+            print(image_idx)
+            
+    return latex_list
+
+def replace_images_with_latex(input_document , output_document , latex_list , _idx=0):
+    doc = Document(input_document)
+
     for paragraph in doc.paragraphs:
         if 'w:drawing' in paragraph._element.xml:
             # Get the XML representation of the paragraph
-            # paragraph_xml = paragraph._element.xml
-            idx += 1
-            # if idx == 4 : 
-            #     break
-            p = paragraph._element
-            new_paragraph = Document().add_paragraph('This is a paragraph')
-            p.getparent().replace(p , new_paragraph._element)
-            paragraph._p = paragraph._element = None
-            # doc.add_paragraph(f'Replaced image{idx}')
-    # Save the modified document
-    doc.save('modified_document.docx')
-
+            paragraph_element  = paragraph._element
+            for child in paragraph_element:
+                paragraph_element.remove(child)
+            word_math = latex_to_word(latex_list[_idx])
+            # Create a Run object to contain the XML math element
+            run = paragraph.add_run()
+            run._r.append(word_math)
+            _idx +=1
+    doc.save(output_document)
 
 def set_foreground_window(hwnd):
     try:
@@ -166,10 +208,13 @@ def open_document_from_path( file_path=None , _word_app=None  ): # note: file_pa
         print("Error:", e)
 
 if __name__ == "__main__":
-    word_app = open_word()
+    # word_app = open_word()
     # path = r'{}'.format(input("give me word document path"))
-    path = r"C:\Users\ansas\OneDrive\Documents\تجربة.docx"
-    doc = open_document_from_path(file_path= path , _word_app = word_app)
-    convert_images_to_latex(doc , None)
+    # path = r"C:\Users\ansas\OneDrive\Documents\تجربة.docx"
+    # doc = open_document_from_path(file_path= path , _word_app = word_app)
+    # convert_images_to_latex(doc , None)
+    
+    
+    print(get_local_ip_address())
     
     

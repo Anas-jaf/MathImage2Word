@@ -1,6 +1,8 @@
+from requests_toolbelt.multipart.encoder import MultipartEncoder
+from PIL import Image
 import requests
 import json 
-from requests_toolbelt.multipart.encoder import MultipartEncoder
+import io
 
 def dict_to_equation(node):
     if "children" in node:
@@ -22,7 +24,7 @@ def dict_to_equation(node):
         elif node["type"] == "div":
             return f"{left_child} \\div {right_child}"
         elif node["type"] == "frac":
-            return "\\frac{"+f"{left_child}" + "}{" f"{right_child}" +"}"
+            return f"\\frac{{{left_child}}}{{{right_child}}}"
         elif node["type"] == "pow":
             return f"{left_child} ^ {right_child}"
         elif node["type"] == "endequals":
@@ -44,7 +46,7 @@ def dict_to_equation(node):
         elif node["type"] == "muli":
             return f"{left_child} \\cdot {right_child}"        
         elif node["type"] == "mixedfrac":
-            return f"{left_child}" + "\\frac{" + f"{dict_to_equation(children[1])}" + "}{" + f"{dict_to_equation(children[2])}" + "}"
+            return f"{left_child}\\frac{{{dict_to_equation(children[1])}}}{{{dict_to_equation(children[2])}}}"
         elif node["type"] == "abs":
             return f"\\left|{left_child}\\right|"
         elif node["type"] == "exp":
@@ -227,7 +229,7 @@ def dict_to_equation(node):
     elif node["type"] == "ellipsis":
         return "..."
     
-def image_ocr_photomath(auth , image_path=None , image_content=None):
+def image_ocr_photomath(auth , image_path=None , image_content=None , full_response = False):
     burp0_url = "https://pws.photomath.net:443/v5/process-image-groups?bookpoint=false&problemdb=true&locale=en&locale_allow_missing=false&check_solution=false&multipart=true&documents=true"
     burp0_headers = {
             "User-Agent": "Photomath/8.28.0 (Android 9; en; SM-G977N; Build/LMY48Z)",
@@ -264,12 +266,26 @@ def image_ocr_photomath(auth , image_path=None , image_content=None):
         "animatedPreview": True
     }
 
-    # Serialize the dictionary to JSON and encode it as bytes
-    json_bytes = json.dumps(json_data).encode('utf-8')
     
     if not image_content :
         image_content = open(image_path , 'rb')
+            
+    if not image_content.startswith(b'\xFF\xD8\xFF\xE0'):
+        image_buffer = io.BytesIO(image_content)
+        other_image_format = Image.open(image_buffer)
+        jpeg_image_buffer = io.BytesIO()
+        other_image_format.save(jpeg_image_buffer, format='JPEG')
+        image_content = jpeg_image_buffer.getvalue()
 
+    jpeg_image = Image.open(jpeg_image_buffer)
+    width, height = jpeg_image.size
+
+    json_data['view']['height'] = int(height)
+    json_data['view']['width'] = int(width)
+    
+    # Serialize the dictionary to JSON and encode it as bytes
+    json_bytes = json.dumps(json_data).encode('utf-8')
+        
     # Create a multipart encoder with auto-generated boundary
     multipart_encoder = MultipartEncoder(
         fields={
@@ -280,14 +296,18 @@ def image_ocr_photomath(auth , image_path=None , image_content=None):
 
     burp0_headers['Content-Type'] = multipart_encoder.content_type
 
-    proxies = {"http": "127.0.0.1:8080", "https": "127.0.0.1:8080"}
+    # proxies = {"http": "127.0.0.1:8080", "https": "127.0.0.1:8080"}
 
-    response = requests.post(burp0_url, headers=burp0_headers, data=multipart_encoder, proxies=proxies, verify=False)
+    # response = requests.post(burp0_url, headers=burp0_headers, data=multipart_encoder, proxies=proxies, verify=False)
+    
+    response = requests.post(burp0_url, headers=burp0_headers, data=multipart_encoder)
 
     json_data = response.json()
     
-    return json_data
-    # return json_data['result']['groups'][0]['entries'][0]['nodeAction']['node']
+    if full_response :
+        return json_data
+    else : 
+        return json_data['result']['groups'][0]['entries'][0]['nodeAction']['node']
     
 
 
